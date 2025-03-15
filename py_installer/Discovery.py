@@ -94,6 +94,8 @@ class Discovery:
         if os.path.exists(fixed_moonraker_path):
             return fixed_moonraker_path
         try:
+            if not os.path.exists(path):
+                return None
             fileAndDirList = os.listdir(path)
             for fileOrDirName in fileAndDirList:
                 fullFileOrDirPath = os.path.join(path, fileOrDirName)
@@ -103,9 +105,12 @@ class Discovery:
             Logger.Debug(f"Failed to _FindMoonrakerConfigFromPath from path {path}: {str(e)}")
         return None
 
-    def _FindAllFiles(self, path:str, prefix:str = None, suffix:str = None, depth:int = 0):
+    def _FindAllFiles(self, path: str, prefix: str = None, suffix: str = None, depth: int = 0):
         results = []
         if depth > 10:
+            return results
+        if not os.path.exists(path):
+            Logger.Warn(f"Skipping missing directory: {path}")
             return results
         fileAndDirList = sorted(os.listdir(path))
         for fileOrDirName in fileAndDirList:
@@ -121,6 +126,7 @@ class Discovery:
                 if include:
                     results.append(fullFileOrDirPath)
         return results
+
 
 
     def _PrintDebugPaths(self, context:Context):

@@ -25,7 +25,18 @@ class Discovery:
 
         pairList = self._FindAllServiceFilesAndPairings()
 
+        # If no service files were found, check for moonraker.conf directly
+        fixed_moonraker_path = "/usr/share/moonraker/moonraker.conf"
+        if os.path.exists(fixed_moonraker_path):
+            Logger.Debug(f"Moonraker config found at fixed path: {fixed_moonraker_path}")
+            context.MoonrakerConfigFilePath = fixed_moonraker_path
+            context.MoonrakerServiceFileName = "DirectConfigDetection"
+            return
+
         if pairList is None or len(pairList) == 0:
+            Logger.Error("No moonraker instances detected. Searched paths:")
+            Logger.Error(f"- /etc/systemd/system (Skipped? {'No' if os.path.exists('/etc/systemd/system') else 'Yes'})")
+            Logger.Error(f"- /usr/share/moonraker/moonraker.conf (Exists? {'Yes' if os.path.exists(fixed_moonraker_path) else 'No'})")
             raise Exception("No moonraker instances could be detected on this device.")
 
         if context.MoonrakerConfigFilePath is not None:
@@ -64,6 +75,7 @@ class Discovery:
                 Logger.Debug(f"Moonraker service [{f}] matched to [{moonrakerConfigPath}]")
                 results.append(ServiceFileConfigPathPair(os.path.basename(f), moonrakerConfigPath))
         return results
+
 
     def _TryToFindMatchingMoonrakerConfig(self, serviceFilePath: str) -> str or None:
         try:
